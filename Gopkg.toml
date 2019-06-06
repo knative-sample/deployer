@@ -30,6 +30,10 @@
   name = "github.com/golang/glog"
 
 [[constraint]]
+  name = "github.com/knative/eventing-sources"
+  version = "0.6.0"
+
+[[constraint]]
   name = "github.com/spf13/cobra"
   version = "0.0.4"
 
@@ -38,9 +42,26 @@
   version = "1.0.3"
 
 [[constraint]]
-  branch = "master"
+  name = "gopkg.in/go-playground/webhooks.v5"
+  version = "5.11.0"
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.12.6"
+
+[[override]]
   name = "k8s.io/apimachinery"
+  version = "kubernetes-1.12.6"
+
+[[override]]
+  name = "k8s.io/code-generator"
+  version = "kubernetes-1.12.6"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.12.6"
 
 [prune]
   go-tests = true
   unused-packages = true
+

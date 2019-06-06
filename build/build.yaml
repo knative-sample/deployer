@@ -2,12 +2,12 @@
 apiVersion: build.knative.dev/v1alpha1
 kind: Build
 metadata:
-  name: wordpress
+  name: build-helloworld
 spec:
   serviceAccountName: build-bot
   source:
     git:
-      url: https://code.aliyun.com/knative-samples/wordpress.git
+      url: https://github.com/knative-sample/deployer.git
       revision: master
   steps:
   - name: build-and-push

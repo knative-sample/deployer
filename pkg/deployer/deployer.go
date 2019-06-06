@@ -1,31 +1,74 @@
 package deployer
 
 import (
-	"context"
-
-	"encoding/json"
-
-	"github.com/cloudevents/sdk-go"
 	"github.com/golang/glog"
-	"github.com/knative/eventing-sources/pkg/kncloudevents"
+	"github.com/knative-sample/deployer/pkg/utils/kube"
+	"github.com/knative/serving/pkg/apis/serving/v1alpha1"
+	"github.com/knative/serving/pkg/apis/serving/v1beta1"
+	servingclientset "github.com/knative/serving/pkg/client/clientset/versioned"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type Deployer struct {
+	Image       string
+	Namespace   string
+	ServiceName string
+	Port        string
 }
 
 func (dp *Deployer) Run() error {
-	c, err := kncloudevents.NewDefaultClient()
+	cfg, err := kube.GetKubeconfig()
 	if err != nil {
-		glog.Error("Failed to create client, ", err)
+		glog.Errorf("get kubeconfig error:%s ", err)
 		return err
 	}
 
-	glog.Fatal(c.StartReceiver(context.Background(), dp.deploy))
-	return nil
-}
+	servingClient, err := servingclientset.NewForConfig(cfg)
+	if err != nil {
+		glog.Fatalf("Error building Serving clientset: %v", err)
+	}
 
-func (dp *Deployer) deploy(event cloudevents.Event) error {
-	str, _ := json.Marshal(event)
-	glog.Infof("cloudevents.Event\n%s", str)
+	if svc, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Get(dp.ServiceName, metav1.GetOptions{}); err != nil {
+		// The Build resource may not exist.
+		if !errors.IsNotFound(err) {
+			glog.Errorf("get Serving %s/%s error:%s ", dp.Namespace, dp.ServiceName, err.Error())
+			return err
+		}
+
+		// create Serving
+		newSvc := &v1alpha1.Service{}
+		newSvc.Namespace = dp.Namespace
+		newSvc.Name = dp.ServiceName
+		newSvc.Spec.Template = &v1alpha1.RevisionTemplateSpec{
+			Spec: v1alpha1.RevisionSpec{
+				RevisionSpec: v1beta1.RevisionSpec{
+					PodSpec: v1beta1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Image: dp.Image,
+							},
+						},
+					},
+				},
+			},
+		}
+		if _, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Create(newSvc); err != nil {
+			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName)
+			return err
+		}
+		return nil
+
+	} else {
+		// Update Serving
+		svc.Spec.Template.Spec.Containers[0].Image = dp.Image
+		if _, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Update(svc); err != nil {
+			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName)
+			return err
+		}
+		return nil
+	}
+
 	return nil
 }

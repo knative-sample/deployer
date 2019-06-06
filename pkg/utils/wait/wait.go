@@ -22,8 +22,6 @@ import (
 	"math/rand"
 	"sync"
 	"time"
-
-	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
 // For any test of the style:
@@ -129,7 +127,7 @@ func JitterUntil(f func(), period time.Duration, jitterFactor float64, sliding b
 		}
 
 		func() {
-			defer runtime.HandleCrash()
+			//defer runtime.HandleCrash()
 			f()
 		}()
 

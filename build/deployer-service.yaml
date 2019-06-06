@@ -1,0 +1,23 @@
+---
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: github-deployer
+spec:
+  template:
+    spec:
+      containers:
+      - image: registry.cn-hangzhou.aliyuncs.com/knative-sample/trigger:master_4f309cc0-20190606123718
+        args:
+          - --trigger-config=/app/config/cicd-trigger.yaml
+        volumeMounts:
+        - name: config-volume 
+          mountPath: /app/config
+      serviceAccountName: knative-build
+      volumes:
+        - name: config-volume 
+          configMap:
+            name: special-config
+            items:
+              - key: cicd-trigger.yaml
+                path: cicd-trigger.yaml
