@@ -47,7 +47,8 @@ func (dp *Deployer) Run() error {
 					PodSpec: v1beta1.PodSpec{
 						Containers: []corev1.Container{
 							{
-								Image: dp.Image,
+								Image:           dp.Image,
+								ImagePullPolicy: corev1.PullAlways,
 							},
 						},
 					},
@@ -55,19 +56,16 @@ func (dp *Deployer) Run() error {
 			},
 		}
 		if _, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Create(newSvc); err != nil {
-			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName)
+			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName, err.Error())
 			return err
 		}
-		return nil
-
 	} else {
 		// Update Serving
 		svc.Spec.Template.Spec.Containers[0].Image = dp.Image
 		if _, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Update(svc); err != nil {
-			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName)
+			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName, err.Error())
 			return err
 		}
-		return nil
 	}
 
 	return nil

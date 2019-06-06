@@ -123,7 +123,7 @@ func (dp *Trigger) bindServiceRole(name, namespace string, serviceAccount string
 			{
 				APIGroups: []string{"serving.knative.dev"},
 				Resources: []string{"services"},
-				Verbs:     []string{"get", "list", "create", "watch", "patch"},
+				Verbs:     []string{"get", "list", "create", "watch", "patch", "update"},
 			},
 		},
 	}

@@ -13,7 +13,7 @@ data:
       serviceAccountName: build-bot
       source:
         git:
-          url: https://code.aliyun.com/knative-samples/helloworld-go.git
+          url: https://github.com/knative-sample/helloworld-go.git
           revision: master
       steps:
       - name: build-and-push
@@ -25,3 +25,9 @@ data:
         env:
         - name: DOCKER_CONFIG
           value: /builder/home/.docker
+      - name: release-service
+        image: "registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer:master_aaac0255-20190606135828"
+        args:
+        - "--namespace=default"
+        - "--serivce-name=helloworld-go"
+        - "--image=registry.cn-hangzhou.aliyuncs.com/knative-sample/helloworld-go:{{.ShortCommitid}}"

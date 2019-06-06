@@ -5,6 +5,10 @@ import (
 
 	"os"
 
+	"encoding/json"
+
+	"time"
+
 	"github.com/golang/glog"
 	"github.com/knative-sample/deployer/cmd/deployer/app/options"
 	"github.com/knative-sample/deployer/pkg/deployer"
@@ -51,8 +55,17 @@ func run(stopCh <-chan struct{}, ops *options.Options) {
 		Port:        ops.Port,
 	}
 
-	// run deployer
-	dp.Run()
+	go func() {
+		<-stopCh
+		time.Sleep(time.Second)
+		os.Exit(0)
+	}()
 
-	<-stopCh
+	// run deployer
+	bts, _ := json.Marshal(dp)
+	glog.Infof("start to deployer: %s", bts)
+	if err := dp.Run(); err != nil {
+		glog.Fatalf("deployer:%s error:%s", bts, err)
+	}
+	glog.Infof("end to deployer: %s", bts)
 }
