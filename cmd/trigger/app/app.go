@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// start edas api
 func NewCommandStartServer(stopCh <-chan struct{}) *cobra.Command {
 	ops := &options.Options{}
 	mainCmd := &cobra.Command{
@@ -30,6 +29,7 @@ func NewCommandStartServer(stopCh <-chan struct{}) *cobra.Command {
 	return mainCmd
 }
 
+// run command
 func run(stopCh <-chan struct{}, ops *options.Options) {
 	if ops.TriggerConfig == "" {
 		glog.Fatalf("--trigger-config is empty")
