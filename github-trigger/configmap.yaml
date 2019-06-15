@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployer-trigger-config
+  namespace: default
+data:
+  "deployer-trigger.yaml": |-
+    apiVersion: build.knative.dev/v1alpha1
+    kind: Build
+    metadata:
+      name: build-deployer
+    spec:
+      serviceAccountName: build-bot
+      source:
+        git:
+          url: https://github.com/knative-sample/deployer.git
+          revision: master
+      steps:
+      - name: build-and-push
+        image: "registry.cn-hangzhou.aliyuncs.com/knative-release/kaniko-project-executor:v0.6.0"
+        args:
+        - "--dockerfile=/workspace/Dockerfile.trigger"
+        # Replace meteatamel with your actual DockerHub
+        - "--destination=registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer-trigger:{{.ShortCommitid}}"
+        env:
+        - name: DOCKER_CONFIG
+          value: /builder/home/.docker
+      - name: build-and-push
+        image: "registry.cn-hangzhou.aliyuncs.com/knative-release/kaniko-project-executor:v0.6.0"
+        args:
+        - "--dockerfile=/workspace/build/Dockerfile.deployer"
+        # Replace meteatamel with your actual DockerHub
+        - "--destination=registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer-deployer:{{.ShortCommitid}}"
+        env:
+        - name: DOCKER_CONFIG
+          value: /builder/home/.docker
