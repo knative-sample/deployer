@@ -1,11 +1,11 @@
 apiVersion: sources.eventing.knative.dev/v1alpha1
 kind: GitHubSource
 metadata:
-  name: helloworld-go-deployer
+  name: deployer-github-sources
 spec:
   eventTypes:
   - pull_request
-  ownerAndRepository: knative-sample/helloworld-go
+  ownerAndRepository: knative-sample/deployer
   accessToken:
     secretKeyRef:
       name: githubsecret
@@ -17,4 +17,5 @@ spec:
   sink:
     apiVersion: serving.knative.dev/v1alpha1
     kind: Service
-    name: github-deployer
+    name: deployer-github-trigger
+
