@@ -7,13 +7,13 @@ spec:
   template:
     spec:
       containers:
-      - image: registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer-trigger:7620096e
+      - image: registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer-trigger:v1_74647e3a-20190806093544
         args:
           - --trigger-config=/app/config/deployer-trigger.yaml
         volumeMounts:
         - name: config-volume 
           mountPath: /app/config
-      serviceAccountName: knative-build
+      serviceAccountName: tekton
       volumes:
         - name: config-volume 
           configMap:

@@ -9,6 +9,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"time"
+	"fmt"
 )
 
 type Deployer struct {
@@ -61,6 +63,7 @@ func (dp *Deployer) Run() error {
 		}
 	} else {
 		// Update Serving
+		svc.Spec.Template.Annotations["updated"] = fmt.Sprintf("%v", time.Now().Unix())
 		svc.Spec.Template.Spec.Containers[0].Image = dp.Image
 		if _, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Update(svc); err != nil {
 			glog.Errorf("create serving: %s/%s error:%s", dp.Namespace, dp.ServiceName, err.Error())

@@ -5,35 +5,26 @@ metadata:
   namespace: default
 data:
   "deployer-trigger.yaml": |-
-    apiVersion: build.knative.dev/v1alpha1
-    kind: Build
+    apiVersion: tekton.dev/v1alpha1
+    kind: PipelineRun
     metadata:
-      name: build-deployer
+      generateName: tekton-kn-sample-
     spec:
-      timeout: 20m0s
-      serviceAccountName: build-bot
-      source:
-        git:
-          url: https://github.com/knative-sample/deployer.git
-          revision: master
-      steps:
-      - name: build-and-push-trigger
-        image: "registry.cn-hangzhou.aliyuncs.com/knative-release/kaniko-project-executor:v0.6.0"
-        args:
-        - "--dockerfile=/workspace/build/Dockerfile.trigger"
-        # Replace meteatamel with your actual DockerHub
-        - "--destination=registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer-trigger:{{.ShortCommitid}}"
-        - "--skip-tls-verify"
-        env:
-        - name: DOCKER_CONFIG
-          value: /builder/home/.docker
-      - name: build-and-push-deployer
-        image: "registry.cn-hangzhou.aliyuncs.com/knative-release/kaniko-project-executor:v0.6.0"
-        args:
-        - "--dockerfile=/workspace/build/Dockerfile.deployer"
-        # Replace meteatamel with your actual DockerHub
-        - "--destination=registry.cn-hangzhou.aliyuncs.com/knative-sample/deployer-deployer:{{.ShortCommitid}}"
-        - "--skip-tls-verify"
-        env:
-        - name: DOCKER_CONFIG
-          value: /builder/home/.docker
+      pipelineRef:
+        name: build-and-deploy-pipeline
+      resources:
+        - name: git-source
+          resourceRef:
+            name: tekton-knative-git
+      params:
+        - name: pathToContext
+          value: "src"
+        - name: pathToYamlFile
+          value: ""
+        - name: imageUrl
+          value: "registry.cn-hangzhou.aliyuncs.com/knative-sample/tekton-knative-helloworld"
+        - name: imageTag
+          value: "1.0"
+      trigger:
+        type: manual
+      serviceAccount: pipeline-account

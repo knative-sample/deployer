@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/knative-sample/deployer/pkg/utils/kube"
-	v1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
-	buildclientset "github.com/knative/build/pkg/client/clientset/versioned"
+	v1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tektonclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
 	gh "gopkg.in/go-playground/webhooks.v5/github"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,13 +72,13 @@ func (dp *Trigger) onPullRequestMerged(payload *gh.PullRequestPayload) error {
 		return err
 	}
 
-	buildClient, err := buildclientset.NewForConfig(cfg)
+	tektonClient, err := tektonclientset.NewForConfig(cfg)
 	if err != nil {
 		glog.Fatalf("Error building Build clientset: %v", err)
 	}
 
 	jsonbts, _ := yaml.YAMLToJSON(buf.Bytes())
-	u := &v1alpha1.Build{}
+	u := &v1alpha1.PipelineRun{}
 	if err := yaml.Unmarshal(jsonbts, u); err != nil {
 		glog.Errorf("parse Build Object error:%s ", err.Error())
 		return err
@@ -89,19 +89,19 @@ func (dp *Trigger) onPullRequestMerged(payload *gh.PullRequestPayload) error {
 	}
 
 	// bind role
-	if err := dp.bindServiceRole(fmt.Sprintf("%s-serving-role", u.Name), u.Namespace, u.Spec.ServiceAccountName); err != nil {
+	if err := dp.bindServiceRole(fmt.Sprintf("%s-serving-role", u.Name), u.Namespace, u.Spec.ServiceAccount); err != nil {
 		glog.Errorf("bindService Role error:%s ", err)
 		return err
 	}
 
-	if _, err := buildClient.BuildV1alpha1().Builds(u.Namespace).Get(u.Name, metav1.GetOptions{}); err != nil {
+	if _, err := tektonClient.TektonV1alpha1().PipelineRuns(u.Namespace).Get(u.Name, metav1.GetOptions{}); err != nil {
 		// The Build resource may not exist.
 		if !errors.IsNotFound(err) {
 			glog.Errorf("get build %s error:%s ", u.Name, err.Error())
 			return err
 		}
 	} else {
-		if err := buildClient.BuildV1alpha1().Builds(u.Namespace).Delete(u.Name, &metav1.DeleteOptions{}); err != nil {
+		if err := tektonClient.TektonV1alpha1().PipelineRuns(u.Namespace).Delete(u.Name, &metav1.DeleteOptions{}); err != nil {
 			if !errors.IsNotFound(err) {
 				glog.Errorf("delete build %s error:%s ", u.Name, err.Error())
 				return err
@@ -109,7 +109,7 @@ func (dp *Trigger) onPullRequestMerged(payload *gh.PullRequestPayload) error {
 		}
 	}
 
-	if _, err := buildClient.BuildV1alpha1().Builds(u.Namespace).Create(u); err != nil {
+	if _, err := tektonClient.TektonV1alpha1().PipelineRuns(u.Namespace).Create(u); err != nil {
 		glog.Errorf("create build %s error:%s ", u.Name, err.Error())
 		return err
 	}
@@ -155,7 +155,7 @@ func (dp *Trigger) bindServiceRole(name, namespace string, serviceAccount string
 
 	clientset, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
-		glog.Fatalf("Error building Build clientset: %v", err)
+		glog.Fatalf("Error building tekton clientset: %v", err)
 	}
 
 	// reconciler Role

@@ -1,12 +1,11 @@
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: knative-build
+  name: tekton
   labels:
-    app: knative-build
-    knative: knative-build
+    app: tekton
 rules:
-- apiGroups: ["build.knative.dev"]
+- apiGroups: ["tekton.dev"]
   resources: ["*"]
   verbs: ["get", "list", "create", "watch", "patch", "delete", "update"]
 - apiGroups: ["rbac.authorization.k8s.io"]
