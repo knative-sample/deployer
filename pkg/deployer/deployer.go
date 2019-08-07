@@ -50,7 +50,6 @@ func (dp *Deployer) Run() error {
 						Containers: []corev1.Container{
 							{
 								Image:           dp.Image,
-								ImagePullPolicy: corev1.PullAlways,
 							},
 						},
 					},
@@ -63,6 +62,9 @@ func (dp *Deployer) Run() error {
 		}
 	} else {
 		// Update Serving
+		if svc.Spec.Template.Annotations == nil {
+			svc.Spec.Template.Annotations = map[string]string{}
+		}
 		svc.Spec.Template.Annotations["updated"] = fmt.Sprintf("%v", time.Now().Unix())
 		svc.Spec.Template.Spec.Containers[0].Image = dp.Image
 		if _, err := servingClient.ServingV1alpha1().Services(dp.Namespace).Update(svc); err != nil {
